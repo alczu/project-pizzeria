@@ -92,6 +92,7 @@
       thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
       thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
       thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+      thisProduct.imageWrapper = thisProduct.element.querySelector(select.menuProduct.imageWrapper);
     }
 
     initAccordion() {
@@ -143,43 +144,57 @@
     processOrder() {
       const thisProduct = this;
       console.log('processOrder:', thisProduct);
-
-      // covert form to object structure e.g. { sauce: ['tomato'], toppings: ['olives', 'redPeppers']}
+  
+      // convert form to object structure e.g. { sauce: ['tomato'], toppings: ['olives', 'redPeppers']}
       const formData = utils.serializeFormToObject(thisProduct.form);
       console.log('formData', formData);
+  
       // set price to default price
       let price = thisProduct.data.price;
+  
       // for every category (param)...
       for (let paramId in thisProduct.data.params) {
-        // determine param value, e.g. paramId = 'toppings', param = { label: 'Toppings', type: 'checkboxes'... }
-        const param = thisProduct.data.params[paramId];
-        console.log(paramId, param);
-
-        // for every option in this category
-        for (let optionId in param.options) {
-          // determine option value, e.g. optionId = 'olives', option = { label: 'Olives', price: 2, default: true }
-          const option = param.options[optionId];
-          console.log(optionId, option);
-          const isDefaultOption = option.default;
-          if (formData[paramId] && formData[paramId].includes(optionId)){
-            
-            if(isDefaultOption!==true){
-              price += option.price;
+          // determine param value, e.g. paramId = 'toppings', param = { label: 'Toppings', type: 'checkboxes'... }
+          const param = thisProduct.data.params[paramId];
+          console.log(paramId, param);
+  
+          // for every option in this category
+          for (let optionId in param.options) {
+              // determine option value, e.g. optionId = 'olives', option = { label: 'Olives', price: 2, default: true }
+              const option = param.options[optionId];
+              console.log(optionId, option);
+              const isDefaultOption = option.default;
+              const optionSelected = formData[paramId] && formData[paramId].includes(optionId);
+  
+              // update price based on selected options
+              if (optionSelected) {
+                  if (!isDefaultOption) {
+                      price += option.price;
+                  }
+              } else {
+                  if (isDefaultOption) {
+                      price -= option.price;
+                  }
               }
-            }else {
-              if(isDefaultOption==true){
-                price -=option.price;
+  
+              // find the image for this option
+              const image = thisProduct.imageWrapper.querySelector(`.${paramId}-${optionId}`);
+              
+              // if the image exists, show or hide it
+              if (image) {
+                  if (optionSelected) {
+                      image.classList.add(classNames.menuProduct.imageVisible);
+                  } else {
+                      image.classList.remove(classNames.menuProduct.imageVisible);
+                  }
               }
-            }
           }
-        
-        }
-      
-
+      }
+  
       // update calculated price in the HTML
       thisProduct.priceElem.innerHTML = price;
-
-    }
+  }
+  
   }
 
     const app = {
